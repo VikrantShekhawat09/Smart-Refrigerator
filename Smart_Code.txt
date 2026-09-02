@@ -1,0 +1,61 @@
+#include <LiquidCrystal_I2C.h>
+#include <DHT.h>
+
+#define DHTPIN 2
+#define DHTTYPE DHT11
+
+#define DOOR_SENSOR 3
+#define BUZZER 4
+#define FAN 5
+
+DHT dht(DHTPIN, DHTTYPE);
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+void setup() {
+  pinMode(DOOR_SENSOR, INPUT_PULLUP);
+  pinMode(BUZZER, OUTPUT);
+  pinMode(FAN, OUTPUT);
+
+  dht.begin();
+  lcd.init();
+  lcd.backlight();
+
+  lcd.setCursor(0, 0);
+  lcd.print("Smart Refrigerator");
+  delay(2000);
+  lcd.clear();
+}
+
+void loop() {
+  float temperature = dht.readTemperature();
+
+  if (isnan(temperature)) {
+    lcd.setCursor(0, 0);
+    lcd.print("Sensor Error");
+    delay(1000);
+    return;
+  }
+
+  lcd.setCursor(0, 0);
+  lcd.print("Temp: ");
+  lcd.print(temperature);
+  lcd.print(" C ");
+
+  if (temperature > 8) {
+    digitalWrite(FAN, HIGH);
+  } else {
+    digitalWrite(FAN, LOW);
+  }
+
+  if (digitalRead(DOOR_SENSOR) == LOW) {
+    lcd.setCursor(0, 1);
+    lcd.print("Door: OPEN     ");
+    digitalWrite(BUZZER, HIGH);
+  } else {
+    lcd.setCursor(0, 1);
+    lcd.print("Door: CLOSED   ");
+    digitalWrite(BUZZER, LOW);
+  }
+
+  delay(1000);
+}
